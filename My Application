@@ -1,0 +1,45 @@
+package com.example.myapplication
+
+import android.graphics.Color
+import android.os.Bundle
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.database.FirebaseDatabase
+
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // This line connects your XML layout to this code
+        setContentView(R.layout.activity_main)
+
+        val etToyId = findViewById<EditText>(R.id.etToyId)
+        val btnVerify = findViewById<Button>(R.id.btnVerify)
+        val tvResult = findViewById<TextView>(R.id.tvResult)
+
+        // Firebase Reference (Matches the "Toys" folder in your screenshot)
+        val database = FirebaseDatabase.getInstance().getReference("Toys")
+
+        btnVerify.setOnClickListener {
+            val id = etToyId.text.toString()
+
+            if (id.length == 6) {
+                database.child(id).get().addOnSuccessListener { snapshot ->
+                    if (snapshot.exists()) {
+                        val name = snapshot.child("artisan").value
+                        val loc = snapshot.child("location").value
+                        tvResult.text = "✅ Authentic!\nArtisan: $name\nLocation: $loc"
+                        tvResult.setTextColor(Color.parseColor("#2E7D32"))
+                    } else {
+                        tvResult.text = "❌ Invalid ID! Not found."
+                        tvResult.setTextColor(Color.RED)
+                    }
+                }.addOnFailureListener {
+                    Toast.makeText(this, "Check Internet Connection", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                etToyId.error = "Enter 6 digits"
+            }
+        }
+    }
+}
